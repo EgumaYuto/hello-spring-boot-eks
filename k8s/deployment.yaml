@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-spring-boot-eks
+  namespace: hello-spring-boot-eks
+  labels:
+    app: hello-spring-boot-eks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-spring-boot-eks
+  template:
+    metadata:
+      labels:
+        app: hello-spring-boot-eks
+    spec:
+      containers:
+        - name: app
+          # ${IMAGE} is substituted by scripts/deploy.sh with the ECR image URL.
+          image: ${IMAGE}
+          ports:
+            - containerPort: 8080
+          # DB connection (URL / username / password) comes from the Secret that
+          # deploy.sh builds from AWS Secrets Manager.
+          envFrom:
+            - secretRef:
+                name: db
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            # Fargate rounds these up to the nearest valid task size
+            # (here 0.5 vCPU / 1 GB). The JVM needs the headroom.
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"

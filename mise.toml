@@ -1,0 +1,5 @@
+# Pin the JDK for this project. The Gradle toolchain and the Dockerfile both
+# target Java 21 (eclipse-temurin:21-jre); zulu-21 is already installed via mise.
+# This overrides any global mise java version (e.g. a global Java 8).
+[tools]
+java = "zulu-21"

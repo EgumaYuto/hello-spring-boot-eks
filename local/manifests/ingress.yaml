@@ -1,0 +1,19 @@
+# nginx Ingress (the local counterpart to the EKS ALB Ingress). The kind port
+# mapping exposes the controller at http://localhost/.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-spring-boot
+  namespace: hello-spring-boot
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hello-spring-boot
+                port:
+                  number: 80

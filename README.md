@@ -7,6 +7,15 @@ EKS 向けに書き直しています。
 まずは **認知負荷の低い Fargate 構成**で「Pod が動いて ALB 経由で外から見える」所まで
 到達し、慣れたら EC2 マネージドノードグループへ発展させる方針です。
 
+> **費用について:** EKS はクラスタが在るだけで課金されます（コントロールプレーン + Aurora + NAT + ALB で
+> ざっくり $8/日）。**普段の Kubernetes 学習は AWS 費用ゼロの [`local/`](local/)（kind）で行い**、
+> AWS 固有の機能（IRSA / ALB Controller / Fargate）を試すときだけ EKS を立て、終わったら
+> [`scripts/teardown.sh`](scripts/teardown.sh) で消す、という使い分けを推奨します。
+
+- **[`local/`](local/README.md)** … kind によるローカル環境（無料・普段使い）
+- **[`docs/architecture.html`](docs/architecture.html)** … しくみの図解ノート（リクエストの流れ / EKSの二面構造 / IRSA / Terraform）
+- 以下はクラウド（EKS）版の手順
+
 ## ECS 版との対応
 
 | 役割 | ECS 版 (`hello-spring-boot`) | EKS 版 (このリポジトリ) |
@@ -26,6 +35,8 @@ infra/
   application/aws/    # EKS, Fargate, OIDC/IRSA, Aurora, Secrets → tfstate key: aws/application
 k8s/                 # 素の kubectl マニフェスト (Namespace/Deployment/Service/Ingress)
 scripts/             # build-and-push / deploy / teardown
+local/               # ★ kind によるローカル環境（AWS費用ゼロ）: up.sh / down.sh / manifests
+docs/                # architecture.html（しくみの図解ノート）
 ```
 
 Terraform は **AWS リソースのみ**を管理します。CoreDNS のパッチ・ALB Controller の

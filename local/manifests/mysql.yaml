@@ -1,0 +1,56 @@
+# In-cluster MySQL — the local stand-in for Aurora. Uses emptyDir, so data is
+# reset if the pod restarts; Flyway re-creates the schema on app startup. Swap to
+# a StatefulSet + PVC later if you want persistence (a good next exercise).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: hello-spring-boot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          args: ["--default-authentication-plugin=mysql_native_password"]
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: rootpassword
+            - name: MYSQL_DATABASE
+              value: hellodb
+            - name: MYSQL_USER
+              value: hellouser
+            - name: MYSQL_PASSWORD
+              value: hellopassword
+          ports:
+            - containerPort: 3306
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-prootpassword"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: hello-spring-boot
+spec:
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      targetPort: 3306

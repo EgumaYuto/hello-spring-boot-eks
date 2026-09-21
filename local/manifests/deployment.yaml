@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-spring-boot
+  namespace: hello-spring-boot
+  labels:
+    app: hello-spring-boot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-spring-boot
+  template:
+    metadata:
+      labels:
+        app: hello-spring-boot
+    spec:
+      # Wait until MySQL accepts connections so Flyway (which runs at app startup)
+      # doesn't crash-loop on a cold database.
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z mysql 3306; do echo waiting for mysql; sleep 2; done"]
+      containers:
+        - name: app
+          # Built locally and loaded into kind (no registry). Never pull.
+          image: hello-spring-boot:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: db
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 45
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              memory: "1Gi"

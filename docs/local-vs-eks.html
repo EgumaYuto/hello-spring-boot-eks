@@ -1,0 +1,360 @@
+<title>local と EKS の構成図</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #F1F4F7;
+    --surface: #FFFFFF;
+    --zone-public: #EAF1F3;
+    --zone-private: #EDEFF3;
+    --ink: #1A2130;
+    --muted: #5B6576;
+    --line: #C9D0DA;
+    --line-strong: #9AA4B4;
+    --accent: #0E7C8A;
+    --accent-soft: #DCEEF0;
+    --warn: #9A5B00;
+    --warn-soft: #F6ECD9;
+    --good: #256B4E;
+    --good-soft: #DEEDE4;
+    --code-bg: #F2F4F7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0F131A;
+      --surface: #191E28;
+      --zone-public: #16232A;
+      --zone-private: #1D2230;
+      --ink: #E7EBF2;
+      --muted: #9BA5B5;
+      --line: #333B49;
+      --line-strong: #556173;
+      --accent: #3FB4C2;
+      --accent-soft: #163038;
+      --warn: #E0A857;
+      --warn-soft: #2C2415;
+      --good: #63C193;
+      --good-soft: #14271E;
+      --code-bg: #12161F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F131A;
+    --surface: #191E28;
+    --zone-public: #16232A;
+    --zone-private: #1D2230;
+    --ink: #E7EBF2;
+    --muted: #9BA5B5;
+    --line: #333B49;
+    --line-strong: #556173;
+    --accent: #3FB4C2;
+    --accent-soft: #163038;
+    --warn: #E0A857;
+    --warn-soft: #2C2415;
+    --good: #63C193;
+    --good-soft: #14271E;
+    --code-bg: #12161F;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    line-height: 1.7;
+    font-size: 16px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px 96px; }
+
+  header.masthead { max-width: 880px; margin: 0 auto; padding: 72px 24px 40px; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: "Archivo", sans-serif; font-weight: 800;
+    font-size: clamp(30px, 5.5vw, 46px); line-height: 1.05;
+    letter-spacing: -0.02em; text-wrap: balance; margin: 0 0 18px;
+  }
+  .lede { font-size: 18px; color: var(--muted); max-width: 62ch; margin: 0; }
+  .masthead .meta {
+    margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; gap: 8px 10px;
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px; color: var(--muted);
+  }
+  .tag { border: 1px solid var(--line); border-radius: 999px; padding: 3px 11px; white-space: nowrap; }
+
+  section { margin-top: 64px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px; }
+  .sec-num {
+    font-family: "Archivo", sans-serif; font-weight: 700;
+    font-size: 14px; color: var(--accent);
+    border: 1.5px solid var(--accent); border-radius: 7px;
+    padding: 1px 9px; flex: none;
+  }
+  h2 {
+    font-family: "Archivo", sans-serif; font-weight: 700;
+    font-size: clamp(22px, 3.4vw, 28px); letter-spacing: -0.01em;
+    line-height: 1.15; text-wrap: balance; margin: 0;
+  }
+  h3 { font-family: "Archivo", sans-serif; font-weight: 600; font-size: 17px; margin: 30px 0 6px; letter-spacing: -0.01em; }
+  p { margin: 12px 0; max-width: 66ch; }
+  strong { font-weight: 600; }
+  code {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.86em;
+    background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 5px; padding: 1px 5px;
+  }
+  .file { color: var(--accent); }
+
+  figure { margin: 26px 0 8px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+  .fig-scroll { overflow-x: auto; }
+  figure svg { display: block; width: 100%; height: auto; min-width: 560px; color: var(--ink); }
+  figcaption { margin-top: 14px; font-size: 13.5px; color: var(--muted); font-family: "IBM Plex Mono", monospace; line-height: 1.5; }
+  figcaption b { color: var(--ink); font-weight: 500; }
+
+  .d-box { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; }
+  .d-zone-pub { fill: var(--zone-public); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .d-zone-pri { fill: var(--zone-private); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .d-vpc { fill: none; stroke: var(--line-strong); stroke-width: 1.5; }
+  .d-ctrl { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .d-warn { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.5; }
+  .d-good { fill: var(--good-soft); stroke: var(--good); stroke-width: 1.5; }
+  .d-edge { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+  .d-flow { fill: none; stroke: var(--accent); stroke-width: 2.4; }
+  .d-dash { fill: none; stroke: var(--muted); stroke-width: 1.4; stroke-dasharray: 4 4; }
+  .d-t { fill: var(--ink); font-family: "IBM Plex Sans", sans-serif; font-size: 13px; }
+  .d-mono { fill: var(--ink); font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+  .d-lab { fill: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 11.5px; }
+  .d-lab-acc { fill: var(--accent); font-family: "IBM Plex Mono", monospace; font-size: 11.5px; font-weight: 500; }
+  .d-lab-warn { fill: var(--warn); font-family: "IBM Plex Mono", monospace; font-size: 11.5px; }
+  .d-zonelab { fill: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.04em; }
+  .d-badge { fill: var(--accent); font-family: "Archivo", sans-serif; font-size: 12px; font-weight: 700; }
+
+  .callout { margin: 22px 0; padding: 16px 18px; border-radius: 12px; border: 1px solid var(--warn); background: var(--warn-soft); }
+  .callout.good { border-color: var(--good); background: var(--good-soft); }
+  .callout .c-label { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 6px; color: var(--warn); font-weight: 500; }
+  .callout.good .c-label { color: var(--good); }
+  .callout p { margin: 0; font-size: 14.5px; max-width: none; }
+
+  .compare { overflow-x: auto; margin: 22px 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+    border-bottom: 1.5px solid var(--line-strong);
+  }
+  tbody td:first-child { color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 12.5px; }
+  td .local { color: var(--muted); }
+  td .eks { color: var(--accent); font-weight: 500; }
+
+  .footnote { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); font-family: "IBM Plex Mono", monospace; }
+</style>
+
+<header class="masthead">
+  <p class="eyebrow">hello-spring-boot-eks / architecture</p>
+  <h1>local と EKS — 同じアプリ、違うエッジ</h1>
+  <p class="lede">同じ Spring Boot アプリを、①ローカルの kind クラスタ（AWS費用ゼロ）と、②AWS の EKS + Fargate で動かしたときの構成図。中央の Deployment / Service / Ingress / probe / Flyway は<strong>まったく同じ</strong>で、外周（公開・DB・イメージ・Secret）だけが差し替わる、という対応関係を図で追います。</p>
+  <div class="meta">
+    <span class="tag">kind (Docker)</span>
+    <span class="tag">nginx Ingress</span>
+    <span class="tag">EKS on Fargate</span>
+    <span class="tag">ALB Controller</span>
+    <span class="tag">Aurora Serverless v2</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ 1. 全体像 ============ -->
+  <section>
+    <div class="sec-head"><span class="sec-num">1</span><h2>共通の中心と、差し替わる外周</h2></div>
+    <p>両環境は「<strong>K8s の中身は共通・エッジだけ違う</strong>」という設計です。<code>Deployment</code> / <code>Service</code> / <code>Ingress</code> / <code>readiness&middot;liveness probe</code> / 起動時の <code>initContainer</code> と Flyway マイグレーションは、ローカルでも AWS でも同じ動きをします。違うのは次の 4 点だけです。</p>
+
+    <div class="compare">
+      <table>
+        <thead><tr><th>役割</th><th>ローカル (local/manifests)</th><th>EKS (k8s + infra)</th></tr></thead>
+        <tbody>
+          <tr><td>公開</td><td class="local">nginx Ingress → <code>http://localhost/</code></td><td class="eks">ALB Ingress（LB Controller が自動生成）</td></tr>
+          <tr><td>DB</td><td class="local">クラスタ内 MySQL Pod（<code>emptyDir</code>）</td><td class="eks">Aurora Serverless v2（別サブネット）</td></tr>
+          <tr><td>Secret</td><td class="local">静的な <code>Secret</code>（docker-compose と同値）</td><td class="eks">Secrets Manager → deploy.sh が生成</td></tr>
+          <tr><td>イメージ</td><td class="local"><code>kind load</code> で直接投入（レジストリ無し）</td><td class="eks">ECR に push → Fargate が pull</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 2. LOCAL (kind) ============ -->
+  <section>
+    <div class="sec-head"><span class="sec-num">2</span><h2>ローカル構成 — kind (Kubernetes in Docker)</h2></div>
+    <p>Docker コンテナ 1 つが Kubernetes ノードになります。kind の <code>extraPortMappings</code> でホスト Mac の 80/443 をノードに通し、nginx Ingress コントローラが <code>http://localhost/</code> で受けます。DB も同じクラスタ内の MySQL Pod です。</p>
+
+    <figure>
+      <div class="fig-scroll">
+      <svg viewBox="0 0 720 606" role="img" aria-label="Mac 上の Docker コンテナ（kindノード）の中に、nginx Ingress コントローラ、Ingress、Service、アプリPod、MySQL Service と MySQL Pod が並ぶ図。ブラウザから localhost:80 を通り、コントローラ→Ingress→Service→アプリPod→MySQLへと流れる。イメージはローカルビルドしてkind loadで投入する。">
+        <defs>
+          <marker id="ah-ink-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--line-strong)"/></marker>
+          <marker id="ah-acc-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>
+          <marker id="ah-mut-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+        </defs>
+
+        <!-- user -->
+        <rect class="d-box" x="260" y="14" width="200" height="44" rx="8"/>
+        <text class="d-t" x="360" y="33" text-anchor="middle">ブラウザ / curl</text>
+        <text class="d-lab" x="360" y="49" text-anchor="middle">http://localhost/</text>
+
+        <!-- Mac -->
+        <rect class="d-vpc" x="24" y="74" width="672" height="518" rx="12"/>
+        <text class="d-zonelab" x="38" y="92">Mac — Docker Desktop / colima</text>
+
+        <!-- kind node -->
+        <rect class="d-zone-pri" x="42" y="104" width="636" height="474" rx="10"/>
+        <text class="d-zonelab" x="56" y="122">kind node = Docker コンテナ  hello-spring-boot-control-plane</text>
+        <text class="d-lab" x="664" y="122" text-anchor="end">extraPortMappings 80/443</text>
+
+        <!-- ingress-nginx ns -->
+        <rect class="d-zone-pub" x="58" y="140" width="604" height="68" rx="9"/>
+        <text class="d-zonelab" x="70" y="158">namespace: ingress-nginx</text>
+        <rect class="d-ctrl" x="250" y="166" width="220" height="36" rx="8"/>
+        <text class="d-mono" x="360" y="188" text-anchor="middle" style="font-size:11.5px">nginx Ingress controller</text>
+
+        <!-- app ns -->
+        <rect class="d-zone-pri" x="58" y="224" width="604" height="346" rx="9"/>
+        <text class="d-zonelab" x="70" y="242">namespace: hello-spring-boot</text>
+
+        <!-- Ingress -->
+        <rect class="d-box" x="250" y="254" width="220" height="44" rx="8"/>
+        <text class="d-t" x="360" y="273" text-anchor="middle">Ingress (nginx)</text>
+        <text class="d-lab" x="360" y="289" text-anchor="middle">path: /  → Service</text>
+
+        <!-- Service app -->
+        <rect class="d-box" x="250" y="318" width="220" height="42" rx="8"/>
+        <text class="d-t" x="360" y="337" text-anchor="middle">Service: hello-spring-boot</text>
+        <text class="d-lab" x="360" y="352" text-anchor="middle">:80 → :8080</text>
+
+        <!-- app Pod -->
+        <rect class="d-box" x="198" y="380" width="324" height="60" rx="8"/>
+        <text class="d-t" x="360" y="401" text-anchor="middle">Pod: hello-spring-boot</text>
+        <text class="d-lab" x="360" y="417" text-anchor="middle">app :8080  ·  Secret db (envFrom)</text>
+        <text class="d-lab" x="360" y="432" text-anchor="middle">initContainer: wait-for-mysql → Flyway</text>
+
+        <!-- mysql Service -->
+        <rect class="d-box" x="250" y="460" width="220" height="38" rx="8"/>
+        <text class="d-t" x="360" y="483" text-anchor="middle">Service: mysql  :3306</text>
+
+        <!-- mysql Pod -->
+        <rect class="d-box" x="230" y="518" width="260" height="46" rx="8"/>
+        <text class="d-t" x="360" y="539" text-anchor="middle">Pod: mysql (mysql:8.0)</text>
+        <text class="d-lab" x="360" y="555" text-anchor="middle">emptyDir — 再起動でリセット</text>
+
+        <!-- image build callout -->
+        <rect class="d-ctrl" x="66" y="380" width="120" height="60" rx="8"/>
+        <text class="d-mono" x="126" y="402" text-anchor="middle" style="font-size:11px">gradlew bootJar</text>
+        <text class="d-lab-acc" x="126" y="418" text-anchor="middle" style="font-size:10.5px">→ docker build</text>
+        <text class="d-lab-acc" x="126" y="432" text-anchor="middle" style="font-size:10.5px">→ kind load</text>
+        <path class="d-dash" d="M186,410 L198,410" marker-end="url(#ah-mut-a)"/>
+
+        <!-- flows -->
+        <path class="d-edge" d="M360,58 L360,166" marker-end="url(#ah-ink-a)"/>
+        <text class="d-lab" x="368" y="116">① :80</text>
+        <path class="d-flow" d="M360,202 L360,254" marker-end="url(#ah-acc-a)"/>
+        <text class="d-lab-acc" x="368" y="232">② ルール /</text>
+        <path class="d-edge" d="M360,298 L360,318" marker-end="url(#ah-ink-a)"/>
+        <path class="d-flow" d="M360,360 L360,380" marker-end="url(#ah-acc-a)"/>
+        <text class="d-lab-acc" x="368" y="374">③ →Pod :8080</text>
+        <path class="d-edge" d="M360,440 L360,460" marker-end="url(#ah-ink-a)"/>
+        <text class="d-lab" x="368" y="454">④ jdbc :3306</text>
+        <path class="d-edge" d="M360,498 L360,518" marker-end="url(#ah-ink-a)"/>
+      </svg>
+      </div>
+      <figcaption><b>要点:</b> 公開は <b>nginx Ingress</b>、DB は<b>同じクラスタ内の MySQL Pod</b>。イメージは ECR を使わず <code>kind load</code> でノードに直接入れるので <code>imagePullPolicy: Never</code>。<code>initContainer</code> が MySQL の 3306 を待ってからアプリが起動し、Flyway が <code>V1__create_users_table.sql</code> を適用する。</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 3. EKS (Fargate) ============ -->
+  <section>
+    <div class="sec-head"><span class="sec-num">3</span><h2>EKS 構成 — Fargate + ALB + Aurora</h2></div>
+    <p>外周が AWS のマネージドサービスに置き換わります。公開は <strong>ALB</strong>（<code>k8s/ingress.yaml</code> を見た AWS Load Balancer Controller が自動生成）、DB は private サブネットの <strong>Aurora Serverless v2</strong>、イメージは <strong>ECR</strong>、Secret は <strong>Secrets Manager</strong> から <code>deploy.sh</code> が組み立てます。Pod は EC2 ノードではなく <strong>Fargate</strong> のマイクロVM上で動きます。</p>
+
+    <figure>
+      <div class="fig-scroll">
+      <svg viewBox="0 0 720 500" role="img" aria-label="VPC の public サブネットに ALB と AWS LB Controller、private サブネットに Fargate 上のアプリPodと Aurora MySQL がある図。ユーザーは ALB を経由し、target-type ip で Pod の IP に直接届く。Pod はさらに Aurora へ接続する。ECR からイメージを、Secrets Manager から db Secret を受け取る。">
+        <defs>
+          <marker id="ah-ink-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--line-strong)"/></marker>
+          <marker id="ah-acc-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>
+          <marker id="ah-mut-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+        </defs>
+
+        <!-- user -->
+        <rect class="d-box" x="285" y="16" width="150" height="42" rx="8"/>
+        <text class="d-t" x="360" y="42" text-anchor="middle">インターネット / ユーザー</text>
+
+        <!-- VPC -->
+        <rect class="d-vpc" x="30" y="84" width="660" height="400" rx="12"/>
+        <text class="d-zonelab" x="42" y="102">VPC  10.0.0.0/16</text>
+
+        <!-- public subnet -->
+        <rect class="d-zone-pub" x="48" y="112" width="624" height="96" rx="9"/>
+        <text class="d-zonelab" x="60" y="130">public subnet ×3 (role/elb)</text>
+        <rect class="d-box" x="248" y="138" width="200" height="52" rx="8"/>
+        <text class="d-t" x="348" y="160" text-anchor="middle">ALB</text>
+        <text class="d-lab" x="348" y="176" text-anchor="middle">internet-facing</text>
+        <rect class="d-ctrl" x="484" y="138" width="176" height="52" rx="8"/>
+        <text class="d-mono" x="572" y="158" text-anchor="middle" style="font-size:11px">AWS LB Controller</text>
+        <text class="d-lab-acc" x="572" y="176" text-anchor="middle" style="font-size:10.5px">Ingress監視→ALB生成 (IRSA)</text>
+        <path class="d-dash" d="M484,164 L448,164" marker-end="url(#ah-mut-b)"/>
+
+        <!-- private subnet -->
+        <rect class="d-zone-pri" x="48" y="226" width="624" height="246" rx="9"/>
+        <text class="d-zonelab" x="60" y="244">private subnet ×3 (role/internal-elb)</text>
+
+        <!-- Pod -->
+        <rect class="d-box" x="230" y="262" width="236" height="58" rx="8"/>
+        <text class="d-t" x="348" y="285" text-anchor="middle">Pod (Fargate)</text>
+        <text class="d-lab" x="348" y="302" text-anchor="middle">Spring Boot  :8080</text>
+
+        <!-- ECR -->
+        <rect class="d-box" x="496" y="256" width="164" height="40" rx="8"/>
+        <text class="d-mono" x="578" y="281" text-anchor="middle" style="font-size:11px">ECR (image)</text>
+        <path class="d-dash" d="M496,276 L466,282" marker-end="url(#ah-mut-b)"/>
+
+        <!-- Secrets Manager -->
+        <rect class="d-box" x="496" y="312" width="164" height="40" rx="8"/>
+        <text class="d-mono" x="578" y="337" text-anchor="middle" style="font-size:11px">Secrets Manager</text>
+        <path class="d-dash" d="M496,332 L466,310" marker-end="url(#ah-mut-b)"/>
+        <text class="d-lab" x="578" y="366" text-anchor="middle" style="font-size:10.5px">→ Secret db (deploy.sh)</text>
+
+        <!-- Aurora -->
+        <rect class="d-box" x="230" y="392" width="236" height="56" rx="8"/>
+        <text class="d-t" x="348" y="415" text-anchor="middle">Aurora MySQL (Serverless v2)</text>
+        <text class="d-lab" x="348" y="431" text-anchor="middle">:3306  private</text>
+
+        <!-- flows -->
+        <path class="d-edge" d="M360,58 L348,138" marker-end="url(#ah-ink-b)"/>
+        <text class="d-lab" x="360" y="102">① HTTP GET /</text>
+        <path class="d-flow" d="M348,190 L348,262" marker-end="url(#ah-acc-b)"/>
+        <text class="d-lab-acc" x="358" y="220">② target-type: ip</text>
+        <text class="d-lab-acc" x="358" y="236">→ PodのIPへ直接</text>
+        <path class="d-edge" d="M348,320 L348,392" marker-end="url(#ah-ink-b)"/>
+        <text class="d-lab" x="358" y="360">③ jdbc :3306</text>
+
+        <text class="d-badge" x="60" y="300">境界を1回だけ越える →</text>
+      </svg>
+      </div>
+      <figcaption><b>要点:</b> ローカルの nginx→Ingress→Service→Pod と<b>同じ骨格</b>のまま、公開が <b>ALB</b>、DB が <b>Aurora</b>、イメージ供給が <b>ECR</b>、Secret が <b>Secrets Manager</b> に替わっただけ。②で ALB は Pod の IP に直接転送する（<code>target-type: ip</code>）。Fargate には EC2 ノードが無く NodePort が使えないため。</figcaption>
+    </figure>
+
+    <div class="callout good">
+      <p class="c-label">使い分け</p>
+      <p>普段の学習は <b>ローカル(kind)</b> で十分 — Kubernetes の核心（Deployment / Service / Ingress / probe / rollout / kubectl）はクラウドと同じ動きです。IRSA / ALB Controller / Fargate / Aurora といった <b>AWS 固有の挙動</b>を試すときだけ EKS を立てる、という運用を想定しています。</p>
+    </div>
+  </section>
+
+  <p class="footnote">local/manifests/ ・ k8s/ ・ infra/ の実マニフェストに基づく構成図。詳しい EKS の内部（コントロールプレーン / IRSA / Terraform 分担）は <a href="architecture.html" class="file">architecture.html</a> を参照。</p>
+
+</div>
